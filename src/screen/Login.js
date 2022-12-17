@@ -4,6 +4,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
+import { FormProvider, useForm } from "react-hook-form";
 
 import styled from "styled-components";
 import { AuthLayout } from "../components/auth/AuthLayout";
@@ -24,6 +25,11 @@ const FacebookLogin = styled.div`
 `;
 
 export default function Login() {
+  const methods = useForm();
+  const { register, handleSubmit, watch } = methods;
+
+  console.log(watch());
+
   return (
     <AuthLayout>
       <PageTitle title="Login" />
@@ -32,8 +38,12 @@ export default function Login() {
           <FontAwesomeIcon icon={faInstagram} size="3x" />
         </div>
         <form>
-          <Input type="text" placeholder="Username" />
-          <Input type="password" placeholder="Password" />
+          <Input {...register("username")} type="text" placeholder="Username" />
+          <Input
+            {...register("password")}
+            type="password"
+            placeholder="Password"
+          />
           <Button type="submit" value={"Log in"} />
         </form>
         <Separator label="or" />
