@@ -1,3 +1,4 @@
+import { gql, useMutation } from "@apollo/client";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
@@ -12,6 +13,7 @@ import Input from "../components/auth/Input";
 import PageTitle from "../components/PageTitle";
 import { FatLink } from "../components/shared";
 import routes from "../router/routes";
+
 const HeaderContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -25,6 +27,27 @@ const SubTitle = styled(FatLink)`
   margin-top: 10px;
 `;
 
+const SIGNUP_MUTATION = gql`
+  mutation CreateAccount(
+    $firstName: String!
+    $lastName: String
+    $username: String!
+    $email: String!
+    $password: String!
+  ) {
+    createAccount(
+      firstName: $firstName
+      lastName: $lastName
+      username: $username
+      email: $email
+      password: $password
+    ) {
+      ok
+      error
+    }
+  }
+`;
+
 export default function SignUp() {
   const methods = useForm({
     mode: "onChange",
@@ -34,10 +57,33 @@ export default function SignUp() {
     register,
     handleSubmit,
     getValues,
+    setError,
+    clearErrors,
     formState: { isValid, errors },
   } = methods;
 
-  const onSubmit = () => {};
+  const clearLoginError = () => {
+    clearErrors("result");
+  };
+
+  const [signUp, { data, loading, error }] = useMutation(SIGNUP_MUTATION);
+
+  const onSubmit = (variables) => {
+    if (loading) return;
+    signUp({
+      variables: getValues(),
+    }).then(({ data }) => {
+      const {
+        createAccount: { ok, error },
+      } = data;
+      if (!ok) {
+        setError("result", { message: error });
+        return;
+      }
+      console.log(variables, data);
+    });
+  };
+
   return (
     <AuthLayout>
       <PageTitle title={"SignUp"} />
@@ -56,6 +102,7 @@ export default function SignUp() {
             type="text"
             placeholder="First Name"
             hasError={Boolean(errors?.firstName?.message)}
+            onChange={clearLoginError}
           />
           {<FormError message={errors?.firstName?.message} />}
           <Input
@@ -65,6 +112,7 @@ export default function SignUp() {
             type="text"
             placeholder="Last Name"
             hasError={Boolean(errors?.lastName?.message)}
+            onChange={clearLoginError}
           />
           {<FormError message={errors?.lastName?.message} />}
 
@@ -75,6 +123,7 @@ export default function SignUp() {
             type="text"
             placeholder="Email"
             hasError={Boolean(errors?.email?.message)}
+            onChange={clearLoginError}
           />
           {<FormError message={errors?.email?.message} />}
 
@@ -85,6 +134,7 @@ export default function SignUp() {
             type="text"
             placeholder="Username"
             hasError={Boolean(errors?.username?.message)}
+            onChange={clearLoginError}
           />
           {<FormError message={errors?.username?.message} />}
 
@@ -95,10 +145,27 @@ export default function SignUp() {
             type="password"
             placeholder="Password"
             hasError={Boolean(errors?.password?.message)}
+            onChange={clearLoginError}
+          />
+          <Input
+            {...register("passwordCheck", {
+              required: { value: true, message: "비밀번호 확인 필수" },
+              validate: (v) => v === getValues().password,
+            })}
+            type="password"
+            placeholder="Password Check"
+            onChange={clearLoginError}
+            hasError={Boolean(errors?.password?.message)}
           />
           {<FormError message={errors?.password?.message} />}
 
-          <Button type="submit" value={"Sign up"} disabled={!isValid} />
+          {<FormError message={errors?.result?.message} />}
+
+          <Button
+            type="submit"
+            value={loading ? "loading.." : "Sign up"}
+            disabled={!isValid || loading}
+          />
         </form>
       </FormBox>
       <BottomBox

@@ -5,7 +5,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import styled from "styled-components";
 import { logUserIn } from "../apollo";
@@ -39,7 +39,7 @@ const LOGIN_MUTATION = gql`
 
 export default function Login() {
   const methods = useForm({
-    mode: "onChange",
+    reValidateMode: "onChange",
   });
   const {
     register,
@@ -54,29 +54,25 @@ export default function Login() {
     clearErrors("result");
   };
 
-  const onCompleted = (data) => {
-    const {
-      login: { ok, error, token },
-    } = data;
-    if (!ok) {
-      return setError("result", {
-        message: error,
-      });
-    }
-    if (token) {
-      logUserIn(token);
-    }
-  };
-
-  const [login, { loading, data, called }] = useMutation(LOGIN_MUTATION, {
-    onCompleted,
-  });
+  const [login, { loading, data, called }] = useMutation(LOGIN_MUTATION);
 
   const onSubmit = (data) => {
     if (loading) return;
     const { username, password } = getValues();
     login({
       variables: { username, password },
+    }).then(({ data }) => {
+      const {
+        login: { ok, error, token },
+      } = data;
+      if (!ok) {
+        return setError("result", {
+          message: error,
+        });
+      }
+      if (token) {
+        logUserIn(token);
+      }
     });
   };
 
