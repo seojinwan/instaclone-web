@@ -3,6 +3,7 @@ import { faInstagram } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import BottomBox from "../components/auth/BottomBox";
@@ -49,6 +50,7 @@ const SIGNUP_MUTATION = gql`
 `;
 
 export default function SignUp() {
+  const navigator = useNavigate();
   const methods = useForm({
     mode: "onChange",
   });
@@ -80,7 +82,7 @@ export default function SignUp() {
         setError("result", { message: error });
         return;
       }
-      console.log(variables, data);
+      navigator("/", { state: { message: "Sign Up Success, Please login!!" } });
     });
   };
 

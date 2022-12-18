@@ -6,6 +6,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 
 import styled from "styled-components";
 import { logUserIn } from "../apollo";
@@ -17,7 +18,12 @@ import FormError from "../components/auth/FormError";
 import Input from "../components/auth/Input";
 import Separator from "../components/auth/Separator";
 import PageTitle from "../components/PageTitle";
+import { FatLink } from "../components/shared";
 import routes from "../router/routes";
+
+const Notification = styled.div`
+  color: #2ecc71;
+`;
 
 const FacebookLogin = styled.div`
   color: #385285;
@@ -38,6 +44,8 @@ const LOGIN_MUTATION = gql`
 `;
 
 export default function Login() {
+  const location = useLocation();
+
   const methods = useForm({
     reValidateMode: "onChange",
   });
@@ -80,8 +88,9 @@ export default function Login() {
     <AuthLayout>
       <PageTitle title="Login" />
       <FormBox>
-        <div>
+        <div style={{ textAlign: "center" }}>
           <FontAwesomeIcon icon={faInstagram} size="3x" />
+          <Notification>{location?.state?.message}</Notification>
         </div>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Input
