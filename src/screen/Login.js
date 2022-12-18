@@ -4,9 +4,9 @@ import {
   faInstagram,
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import styled from "styled-components";
 import { logUserIn } from "../apollo";
@@ -18,7 +18,6 @@ import FormError from "../components/auth/FormError";
 import Input from "../components/auth/Input";
 import Separator from "../components/auth/Separator";
 import PageTitle from "../components/PageTitle";
-import { FatLink } from "../components/shared";
 import routes from "../router/routes";
 
 const Notification = styled.div`
@@ -47,12 +46,15 @@ export default function Login() {
   const location = useLocation();
 
   const methods = useForm({
-    reValidateMode: "onChange",
+    mode: "onChange",
+    defaultValues: {
+      username: location?.state?.username || "",
+      password: location?.state?.password || "",
+    },
   });
   const {
     register,
     handleSubmit,
-    getValues,
     setError,
     clearErrors,
     formState: { errors, isValid },
@@ -62,13 +64,12 @@ export default function Login() {
     clearErrors("result");
   };
 
-  const [login, { loading, data, called }] = useMutation(LOGIN_MUTATION);
+  const [login, { loading }] = useMutation(LOGIN_MUTATION);
 
   const onSubmit = (data) => {
     if (loading) return;
-    const { username, password } = getValues();
     login({
-      variables: { username, password },
+      variables: data,
     }).then(({ data }) => {
       const {
         login: { ok, error, token },

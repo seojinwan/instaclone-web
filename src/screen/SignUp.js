@@ -68,12 +68,13 @@ export default function SignUp() {
     clearErrors("result");
   };
 
-  const [signUp, { data, loading, error }] = useMutation(SIGNUP_MUTATION);
+  const [signUp, { loading }] = useMutation(SIGNUP_MUTATION);
 
   const onSubmit = (variables) => {
     if (loading) return;
+    const { username, password } = variables;
     signUp({
-      variables: getValues(),
+      variables,
     }).then(({ data }) => {
       const {
         createAccount: { ok, error },
@@ -82,7 +83,14 @@ export default function SignUp() {
         setError("result", { message: error });
         return;
       }
-      navigator("/", { state: { message: "Sign Up Success, Please login!!" } });
+
+      navigator("/", {
+        state: {
+          message: "Sign Up Success, Please login!!",
+          username,
+          password,
+        },
+      });
     });
   };
 
