@@ -1,3 +1,4 @@
+import { gql, useMutation } from "@apollo/client";
 import {
   faFacebookSquare,
   faInstagram,
@@ -7,10 +8,12 @@ import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import styled from "styled-components";
+import { logUserIn } from "../apollo";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import BottomBox from "../components/auth/BottomBox";
 import Button from "../components/auth/Button";
 import FormBox from "../components/auth/FormBox";
+import FormError from "../components/auth/FormError";
 import Input from "../components/auth/Input";
 import Separator from "../components/auth/Separator";
 import PageTitle from "../components/PageTitle";
@@ -24,11 +27,58 @@ const FacebookLogin = styled.div`
   }
 `;
 
-export default function Login() {
-  const methods = useForm();
-  const { register, handleSubmit, watch } = methods;
+const LOGIN_MUTATION = gql`
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) {
+      ok
+      token
+      error
+    }
+  }
+`;
 
-  console.log(watch());
+export default function Login() {
+  const methods = useForm({
+    mode: "onChange",
+  });
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setError,
+    clearErrors,
+    formState: { errors, isValid },
+  } = methods;
+
+  const clearLoginError = () => {
+    clearErrors("result");
+  };
+
+  const onCompleted = (data) => {
+    const {
+      login: { ok, error, token },
+    } = data;
+    if (!ok) {
+      return setError("result", {
+        message: error,
+      });
+    }
+    if (token) {
+      logUserIn(token);
+    }
+  };
+
+  const [login, { loading, data, called }] = useMutation(LOGIN_MUTATION, {
+    onCompleted,
+  });
+
+  const onSubmit = (data) => {
+    if (loading) return;
+    const { username, password } = getValues();
+    login({
+      variables: { username, password },
+    });
+  };
 
   return (
     <AuthLayout>
@@ -37,14 +87,41 @@ export default function Login() {
         <div>
           <FontAwesomeIcon icon={faInstagram} size="3x" />
         </div>
-        <form>
-          <Input {...register("username")} type="text" placeholder="Username" />
+        <form onSubmit={handleSubmit(onSubmit)}>
           <Input
-            {...register("password")}
+            {...register("username", {
+              minLength: {
+                value: 5,
+                message: "아이디는 5글자 이상",
+              },
+              required: true,
+            })}
+            onChange={clearLoginError}
+            type="text"
+            placeholder="Username"
+            hasError={!!errors?.username?.message}
+          />
+          <FormError message={errors?.username?.message} />
+
+          <Input
+            {...register("password", {
+              required: {
+                value: true,
+                message: "비밀번호는 필수 입력 입니다",
+              },
+            })}
+            onChange={clearLoginError}
+            hasError={!!errors?.password?.message}
             type="password"
             placeholder="Password"
           />
-          <Button type="submit" value={"Log in"} />
+          <FormError message={errors?.password?.message} />
+          <Button
+            type="submit"
+            value={loading ? "Loading..." : "Log in"}
+            disabled={!isValid || loading}
+          />
+          <FormError message={errors?.result?.message} />
         </form>
         <Separator label="or" />
         <FacebookLogin>

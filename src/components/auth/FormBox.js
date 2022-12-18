@@ -3,7 +3,7 @@ import { BaseBox } from "../shared";
 
 const SFormBox = styled(BaseBox)`
   display: flex;
-  justifiy-content: center;
+  justify-content: center;
   align-items: center;
   flex-direction: column;
   padding: 35px 40px 20px 40px;

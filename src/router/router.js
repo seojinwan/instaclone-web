@@ -5,6 +5,7 @@ import routes from "./routes";
 import NotFound from "../screen/NotFound";
 import SignUp from "../screen/SignUp";
 import Login from "../screen/Login";
+import Home from "../screen/Home";
 
 export default createBrowserRouter([
   {
@@ -13,7 +14,7 @@ export default createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Login />,
+        element: <Home />,
       },
     ],
     errorElement: <NotFound />,
