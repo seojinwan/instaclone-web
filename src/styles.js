@@ -4,15 +4,14 @@ export const lightTheme = {
   accent: "#0095f6",
   borderColor: "rgb(219, 219, 219)",
   fontColor: "rgb(39, 39, 39)",
-
-  backgroundColor: "#fafafa",
+  bgColor: "#fafafa",
 };
 
 export const darkTheme = {
   accent: "#7f8c8d",
   fontColor: "rgb(39, 39, 39)",
-
-  backgroundColor: "#2c2c2c",
+  borderColor: "rgb(219, 219, 219)",
+  bgColor: "#2c2c2c",
 };
 export const GlobalStyles = createGlobalStyle`
     ${reset}
@@ -23,7 +22,7 @@ export const GlobalStyles = createGlobalStyle`
       all : unset;
     }
     body {
-      background-color: ${(props) => props.theme.backgroundColor};
+      background-color: ${(props) => props.theme.bgColor};
       color: ${(props) => props.theme.fontColor};
       font-size: 14px;
       font-family: 'Open Sans', sans-serif;

@@ -2,6 +2,7 @@ import { useReactiveVar } from "@apollo/client";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { isLoggedInVar, logUserOut } from "../apollo";
+import Layout from "../components/Layout";
 import Login from "./Login";
 
 function Home(props) {
@@ -10,12 +11,13 @@ function Home(props) {
   return (
     <React.Fragment>
       {isLoggedIn ? (
-        <div>
-          <h1>Home</h1>
+        <Layout>
           <button onClick={() => logUserOut(navigator)}>Log out now</button>
-        </div>
+        </Layout>
       ) : (
-        <Login />
+        <Layout>
+          <Login />
+        </Layout>
       )}
     </React.Fragment>
   );
