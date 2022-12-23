@@ -6,10 +6,11 @@ import NotFound from "../screen/NotFound";
 import SignUp from "../screen/SignUp";
 import Login from "../screen/Login";
 import Home from "../screen/Home";
+import Auth from "../screen/Auth";
 
 export default createBrowserRouter([
   {
-    path: routes.home,
+    path: "/",
     element: <App />,
     children: [
       {
@@ -20,11 +21,15 @@ export default createBrowserRouter([
     errorElement: <NotFound />,
   },
   {
-    path: routes.signUp,
-    element: <App />,
+    path: "auth",
+    element: <Auth />,
     children: [
       {
-        index: true,
+        path: "login",
+        element: <Login />,
+      },
+      {
+        path: "sign-up",
         element: <SignUp />,
       },
     ],

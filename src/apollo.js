@@ -22,6 +22,7 @@ export const logUserOut = (navigate) => {
 };
 
 export const darkModeVar = makeVar(Boolean(localStorage.getItem(DARK_MODE)));
+
 export const enableDarkMode = () => {
   localStorage.setItem(DARK_MODE, "enabled");
   darkModeVar(true);

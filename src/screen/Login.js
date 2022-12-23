@@ -44,6 +44,7 @@ const LOGIN_MUTATION = gql`
 
 export default function Login() {
   const location = useLocation();
+  const navigator = useNavigate();
 
   const methods = useForm({
     mode: "onChange",
@@ -81,6 +82,7 @@ export default function Login() {
       }
       if (token) {
         logUserIn(token);
+        navigator(routes.home);
       }
     });
   };
