@@ -10,6 +10,7 @@ import {
   faHeart,
 } from "@fortawesome/free-regular-svg-icons";
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
+import { gql, useMutation } from "@apollo/client";
 
 const PhotoContainer = styled.div`
   background-color: white;
@@ -60,6 +61,15 @@ const Likes = styled(FatText)`
   display: block;
 `;
 
+const TOGGLE_LIKE_MUTATION = gql`
+  mutation ToggleLike($id: Int!) {
+    toggleLike(id: $id) {
+      ok
+      error
+    }
+  }
+`;
+
 Photo.propTypes = {
   id: PropTypes.number.isRequired,
   user: PropTypes.shape({
@@ -72,6 +82,14 @@ Photo.propTypes = {
 };
 
 function Photo({ id, user, file, isLiked, likes }) {
+  const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION);
+  const handleToggleLike = () => {
+    toggleLikeMutation({
+      variables: {
+        id,
+      },
+    });
+  };
   return (
     <PhotoContainer key={id}>
       <PhotoHeader>
@@ -82,7 +100,7 @@ function Photo({ id, user, file, isLiked, likes }) {
       <PhotoData>
         <PhotoActions>
           <div>
-            <PhotoAction>
+            <PhotoAction onClick={handleToggleLike}>
               <FontAwesomeIcon
                 style={{ color: isLiked ? "tomato" : "inherit" }}
                 icon={isLiked ? SolidHeart : faHeart}
