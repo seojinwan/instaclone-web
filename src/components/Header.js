@@ -65,9 +65,7 @@ function Header(props) {
               <Icon>
                 <FontAwesomeIcon icon={faCompass} size="lg" />
               </Icon>
-              <Icon>
-                <Avatar url={data?.me?.avatar} />
-              </Icon>
+              <Icon>{data && <Avatar url={data?.me?.avatar} />}</Icon>
             </IconsContainer>
           ) : (
             <Link to={routes.home}>

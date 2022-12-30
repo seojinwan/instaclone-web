@@ -18,7 +18,7 @@ export const logUserIn = (token) => {
 export const logUserOut = (navigate) => {
   localStorage.removeItem(TOKEN);
   isLoggedInVar(false);
-  navigate(routes.home, { replace: true });
+  navigate(routes.login, { replace: true });
 };
 
 export const darkModeVar = makeVar(Boolean(localStorage.getItem(DARK_MODE)));
