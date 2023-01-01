@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-regular-svg-icons";
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
 import { gql, useMutation } from "@apollo/client";
+import { FEED_QUERY } from "../../screen/Home";
 
 const PhotoContainer = styled.div`
   background-color: white;
@@ -61,6 +62,21 @@ const Likes = styled(FatText)`
   display: block;
 `;
 
+const Comments = styled.div`
+  margin-top: 20px;
+`;
+const Comment = styled.div``;
+const CommentCaption = styled.span`
+  margin-left: 10px;
+`;
+const CommentCount = styled.span`
+  display: block;
+  opacity: 0.7;
+  font-weight: 600;
+  font-size: 10px;
+  margin: 10px 0;
+`;
+
 const TOGGLE_LIKE_MUTATION = gql`
   mutation ToggleLike($id: Int!) {
     toggleLike(id: $id) {
@@ -79,17 +95,65 @@ Photo.propTypes = {
   file: PropTypes.string,
   isLiked: PropTypes.bool,
   likes: PropTypes.number,
+  caption: PropTypes.string,
+  comments: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.number.isRequired,
+      isMe: PropTypes.bool.isRequired,
+      payload: PropTypes.string.isRequired,
+      createdAt: PropTypes.string.isRequired,
+    })
+  ),
+  commentNumber: PropTypes.number,
 };
 
-function Photo({ id, user, file, isLiked, likes }) {
-  const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION);
-  const handleToggleLike = () => {
-    toggleLikeMutation({
-      variables: {
-        id,
-      },
-    });
-  };
+function Photo({
+  id,
+  user,
+  file,
+  isLiked,
+  likes,
+  caption,
+  comments,
+  commentNumber,
+}) {
+  const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
+    variables: { id },
+    refetchQueries: [{ query: FEED_QUERY }],
+    update: (cache, result) => {
+      const {
+        data: {
+          toggleLike: { ok, error },
+        },
+      } = result;
+      if (ok) {
+        const { isLiked, likes } = cache.readFragment({
+          id: `Photo:${id}`,
+          fragment: gql`
+            fragment BSName on Photo {
+              isLiked
+              likes
+            }
+          `,
+        });
+
+        cache.writeFragment({
+          id: `Photo:${id}`,
+          fragment: gql`
+            fragment BSName on Photo {
+              isLiked
+              likes
+            }
+          `,
+          data: {
+            isLiked: !isLiked,
+            likes: isLiked ? likes - 1 : likes + 1,
+          },
+        });
+      }
+    },
+  });
+
   return (
     <PhotoContainer key={id}>
       <PhotoHeader>
@@ -100,7 +164,7 @@ function Photo({ id, user, file, isLiked, likes }) {
       <PhotoData>
         <PhotoActions>
           <div>
-            <PhotoAction onClick={handleToggleLike}>
+            <PhotoAction onClick={toggleLikeMutation}>
               <FontAwesomeIcon
                 style={{ color: isLiked ? "tomato" : "inherit" }}
                 icon={isLiked ? SolidHeart : faHeart}
@@ -118,6 +182,15 @@ function Photo({ id, user, file, isLiked, likes }) {
           </div>
         </PhotoActions>
         <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
+        <Comments>
+          <Comment>
+            <FatText>{user.username}</FatText>
+            <CommentCaption>{caption}</CommentCaption>
+            <CommentCount>
+              {commentNumber === 1 ? "1 comment" : `${commentNumber} comments`}
+            </CommentCount>
+          </Comment>
+        </Comments>
       </PhotoData>
     </PhotoContainer>
   );
