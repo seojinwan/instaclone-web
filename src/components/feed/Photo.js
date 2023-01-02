@@ -12,6 +12,7 @@ import {
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
 import { gql, useMutation } from "@apollo/client";
 import { FEED_QUERY } from "../../screen/Home";
+import Comment from "./Comment";
 
 const PhotoContainer = styled.div`
   background-color: white;
@@ -65,15 +66,11 @@ const Likes = styled(FatText)`
 const Comments = styled.div`
   margin-top: 20px;
 `;
-const Comment = styled.div``;
-const CommentCaption = styled.span`
-  margin-left: 10px;
-`;
 const CommentCount = styled.span`
   display: block;
   opacity: 0.7;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 12px;
   margin: 10px 0;
 `;
 
@@ -98,8 +95,12 @@ Photo.propTypes = {
   caption: PropTypes.string,
   comments: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number.number.isRequired,
+      id: PropTypes.number.isRequired,
       isMe: PropTypes.bool.isRequired,
+      user: PropTypes.shape({
+        avatar: PropTypes.string,
+        username: PropTypes.string.isRequired,
+      }),
       payload: PropTypes.string.isRequired,
       createdAt: PropTypes.string.isRequired,
     })
@@ -119,6 +120,7 @@ function Photo({
 }) {
   const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
     variables: { id },
+    // 1. refetchQueries (해당 쿼를 실행)
     refetchQueries: [{ query: FEED_QUERY }],
     update: (cache, result) => {
       const {
@@ -127,29 +129,39 @@ function Photo({
         },
       } = result;
       if (ok) {
-        const { isLiked, likes } = cache.readFragment({
+        // modify 사용시 apollo client v3 이상
+        cache.modify({
           id: `Photo:${id}`,
-          fragment: gql`
-            fragment BSName on Photo {
-              isLiked
-              likes
-            }
-          `,
-        });
-
-        cache.writeFragment({
-          id: `Photo:${id}`,
-          fragment: gql`
-            fragment BSName on Photo {
-              isLiked
-              likes
-            }
-          `,
-          data: {
-            isLiked: !isLiked,
-            likes: isLiked ? likes - 1 : likes + 1,
+          fields: {
+            isLiked: (prev) => !prev,
+            likes: (prev) => (isLiked ? prev - 1 : prev + 1),
           },
         });
+
+        // Fragment 사용시
+        // const { isLiked, likes } = cache.readFragment({
+        //   id: `Photo:${id}`,
+        //   fragment: gql`
+        //     fragment BSName on Photo {
+        //       isLiked
+        //       likes
+        //     }
+        //   `,
+        // });
+
+        // cache.writeFragment({
+        //   id: `Photo:${id}`,
+        //   fragment: gql`
+        //     fragment BSName on Photo {
+        //       isLiked
+        //       likes
+        //     }
+        //   `,
+        //   data: {
+        //     isLiked: !isLiked,
+        //     likes: isLiked ? likes - 1 : likes + 1,
+        //   },
+        // });
       }
     },
   });
@@ -183,13 +195,24 @@ function Photo({
         </PhotoActions>
         <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
         <Comments>
-          <Comment>
+          <Comment author={user.username} payload={caption} />
+          <CommentCount>
+            {commentNumber === 1 ? "1 comment" : `${commentNumber} comments`}
+          </CommentCount>
+
+          {/* <Comment>
             <FatText>{user.username}</FatText>
             <CommentCaption>{caption}</CommentCaption>
             <CommentCount>
               {commentNumber === 1 ? "1 comment" : `${commentNumber} comments`}
             </CommentCount>
-          </Comment>
+            {comments?.map((comment, idx) => (
+              <Comment key={`comment-${idx}`}>
+                <FatText>{comment.user.username}</FatText>
+                <CommentCaption>{comment.payload}</CommentCaption>
+              </Comment>
+            ))}
+          </Comment> */}
         </Comments>
       </PhotoData>
     </PhotoContainer>
