@@ -12,7 +12,9 @@ import {
 import { faHeart as SolidHeart } from "@fortawesome/free-solid-svg-icons";
 import { gql, useMutation } from "@apollo/client";
 import { FEED_QUERY } from "../../screen/Home";
-import Comment from "./Comment";
+
+import { useForm } from "react-hook-form";
+import Comments from "./Comments";
 
 const PhotoContainer = styled.div`
   background-color: white;
@@ -63,17 +65,6 @@ const Likes = styled(FatText)`
   display: block;
 `;
 
-const Comments = styled.div`
-  margin-top: 20px;
-`;
-const CommentCount = styled.span`
-  display: block;
-  opacity: 0.7;
-  font-weight: 600;
-  font-size: 12px;
-  margin: 10px 0;
-`;
-
 const TOGGLE_LIKE_MUTATION = gql`
   mutation ToggleLike($id: Int!) {
     toggleLike(id: $id) {
@@ -118,7 +109,8 @@ function Photo({
   comments,
   commentNumber,
 }) {
-  const [toggleLikeMutation, { loading }] = useMutation(TOGGLE_LIKE_MUTATION, {
+  // Toggle Like
+  const [toggleLikeMutation] = useMutation(TOGGLE_LIKE_MUTATION, {
     variables: { id },
     // 1. refetchQueries (해당 쿼를 실행)
     refetchQueries: [{ query: FEED_QUERY }],
@@ -129,39 +121,14 @@ function Photo({
         },
       } = result;
       if (ok) {
-        // modify 사용시 apollo client v3 이상
         cache.modify({
           id: `Photo:${id}`,
           fields: {
+            likes: (prev, { readField }) =>
+              readField("isLiked") ? prev - 1 : prev + 1,
             isLiked: (prev) => !prev,
-            likes: (prev) => (isLiked ? prev - 1 : prev + 1),
           },
         });
-
-        // Fragment 사용시
-        // const { isLiked, likes } = cache.readFragment({
-        //   id: `Photo:${id}`,
-        //   fragment: gql`
-        //     fragment BSName on Photo {
-        //       isLiked
-        //       likes
-        //     }
-        //   `,
-        // });
-
-        // cache.writeFragment({
-        //   id: `Photo:${id}`,
-        //   fragment: gql`
-        //     fragment BSName on Photo {
-        //       isLiked
-        //       likes
-        //     }
-        //   `,
-        //   data: {
-        //     isLiked: !isLiked,
-        //     likes: isLiked ? likes - 1 : likes + 1,
-        //   },
-        // });
       }
     },
   });
@@ -194,26 +161,13 @@ function Photo({
           </div>
         </PhotoActions>
         <Likes>{likes === 1 ? "1 like" : `${likes} likes`}</Likes>
-        <Comments>
-          <Comment author={user.username} payload={caption} />
-          <CommentCount>
-            {commentNumber === 1 ? "1 comment" : `${commentNumber} comments`}
-          </CommentCount>
-
-          {/* <Comment>
-            <FatText>{user.username}</FatText>
-            <CommentCaption>{caption}</CommentCaption>
-            <CommentCount>
-              {commentNumber === 1 ? "1 comment" : `${commentNumber} comments`}
-            </CommentCount>
-            {comments?.map((comment, idx) => (
-              <Comment key={`comment-${idx}`}>
-                <FatText>{comment.user.username}</FatText>
-                <CommentCaption>{comment.payload}</CommentCaption>
-              </Comment>
-            ))}
-          </Comment> */}
-        </Comments>
+        <Comments
+          photoId={id}
+          author={user.username}
+          caption={caption}
+          commentNumber={commentNumber}
+          comments={comments}
+        />
       </PhotoData>
     </PhotoContainer>
   );
