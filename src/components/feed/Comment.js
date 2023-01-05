@@ -61,7 +61,9 @@ function Comment({ id, author, payload, photoId }) {
 
   return (
     <CommentContainer>
-      <FatText>{author}</FatText>
+      <Link to={`/users/${author}`}>
+        <FatText>{author}</FatText>
+      </Link>
       <CommentCaption>
         {payload?.split(" ")?.map((word, idx) =>
           /#[\w]+/.test(word) ? (

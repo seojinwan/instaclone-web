@@ -1,7 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+
 import styled from "styled-components";
-import { logUserOut } from "../apollo";
 
 const SAvatar = styled.div`
   width: 25px;
@@ -17,19 +16,7 @@ const Img = styled.img`
 `;
 
 function Avatar({ url = "", lg = false }) {
-  const navigate = useNavigate();
-  return (
-    <SAvatar
-      onClick={() => {
-        if (window.confirm("로그아웃?")) {
-          logUserOut(navigate);
-        }
-      }}
-      lg={lg}
-    >
-      {url !== "" ? <Img src={url} /> : null}
-    </SAvatar>
-  );
+  return <SAvatar lg={lg}>{url !== "" ? <Img src={url} /> : null}</SAvatar>;
 }
 
 export default Avatar;
