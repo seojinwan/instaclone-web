@@ -17,6 +17,7 @@ const SHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 30px;
 `;
 
 const Wrapper = styled.div`
@@ -60,7 +61,9 @@ function Header(props) {
           {isLoggedIn ? (
             <IconsContainer>
               <Icon>
-                <FontAwesomeIcon icon={faHome} size="lg" />
+                <Link to={routes.home}>
+                  <FontAwesomeIcon icon={faHome} size="lg" />
+                </Link>
               </Icon>
               <Icon>
                 <FontAwesomeIcon icon={faCompass} size="lg" />
