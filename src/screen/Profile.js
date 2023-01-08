@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useApolloClient, useMutation, useQuery } from "@apollo/client";
 import React from "react";
 import { useParams } from "react-router-dom";
 import { faHeart, faComment } from "@fortawesome/free-solid-svg-icons";
@@ -7,6 +7,7 @@ import styled from "styled-components";
 import { FatText } from "../components/shared";
 import Button from "../components/auth/Button";
 import PageTitle from "../components/PageTitle";
+import useUser from "../hooks/useUser";
 const Header = styled.div`
   display: flex;
 `;
@@ -113,7 +114,26 @@ const SEE_PROFILE_QUERY = gql`
   }
 `;
 
+const FOLLOW_USER_MUTATION = gql`
+  mutation FollowUser($username: String) {
+    followUser(username: $username) {
+      ok
+      error
+    }
+  }
+`;
+
+const UNFOLLOW_USER_MUTATION = gql`
+  mutation UnfollowUser($username: String) {
+    unfollowUser(username: $username) {
+      ok
+    }
+  }
+`;
+
 function Profile(props) {
+  const client = useApolloClient();
+  const { data: userData } = useUser();
   const { username } = useParams();
 
   const { data, loading } = useQuery(SEE_PROFILE_QUERY, {
@@ -122,13 +142,70 @@ function Profile(props) {
     },
   });
 
+  const [followUserMutation] = useMutation(FOLLOW_USER_MUTATION, {
+    variables: {
+      username,
+    },
+    // Update로 캐시 업데이트 하는 경우
+    update: (cache, result) => {
+      const {
+        data: {
+          followUser: { ok },
+        },
+      } = result;
+      if (!ok) return;
+      // 팔로우 대상 유저 캐시 변경
+      cache.modify({
+        id: `User:${username}`,
+        fields: {
+          isFollowing: (prev) => true,
+          totalFollowers: (prev) => prev + 1,
+        },
+      });
+      // 유저 자신 캐시 정보 변경 (팔로잉 수 증가)
+      cache.modify({
+        id: `User:${userData?.me?.username}`,
+        fields: {
+          totalFollowing: (prev) => prev + 1,
+        },
+      });
+    },
+  });
+  const [unFollowUserMutation] = useMutation(UNFOLLOW_USER_MUTATION, {
+    variables: {
+      username,
+    },
+    // onComplete로 캐시 업데이트 하는 경우
+    onCompleted: (data) => {
+      const {
+        unfollowUser: { ok },
+      } = data;
+      if (!ok) return;
+      // 언팔로우 대상 유저 캐시 변경
+      client.cache.modify({
+        id: `User:${username}`,
+        fields: {
+          isFollowing: (prev) => false,
+          totalFollowers: (prev) => prev - 1,
+        },
+      });
+      // 유저 자신 캐시 정보 변경 (팔로잉 수 감소)
+      client.cache.modify({
+        id: `User:${userData?.me?.username}`,
+        fields: {
+          totalFollowing: (prev) => prev - 1,
+        },
+      });
+    },
+  });
+
   const getButton = (seeProfile) => {
     const { isMe, isFollowing } = seeProfile;
     if (isMe) return <ProfileBtn>SeeProfile</ProfileBtn>;
     return isFollowing ? (
-      <ProfileBtn>UnFollow</ProfileBtn>
+      <ProfileBtn onClick={unFollowUserMutation}>UnFollow</ProfileBtn>
     ) : (
-      <ProfileBtn>Follow</ProfileBtn>
+      <ProfileBtn onClick={followUserMutation}>Follow</ProfileBtn>
     );
   };
 
